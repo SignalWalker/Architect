@@ -1,0 +1,34 @@
+Word = @{ LETTER ~ (LETTER | NUMBER)* }
+Number = @{ ASCII_DIGIT+ }
+WHITESPACE = _{ " " }
+
+All = { "*" }
+None = { "_" }
+This = { "." }
+Class = @{ Word }
+Root = { "~" }
+Parent = { "\\" }
+Ancestors = { "\\\\" }
+Children = { "/" }
+Descendants = { "//" }
+Env = { "{" ~ String ~ "}" }
+Order = { "(" ~ Expr+ ~ ")" }
+Attr = { "[" ~ String ~ ("=" ~ (String))? ~ "]" }
+Index = { "[" ~ Number ~ "]" }
+State = { ":" ~ String }
+
+Slide = { Post ~ "??" }
+IfElse = { Post ~ "??" ~ Expr ~ "::" }
+Or = { Post ~ "||" }
+
+String = _{ (Selector | Word) }
+
+Post = _{ (Class | All | None | This | Root | Env | Order | Attr | Index | Ancestors | Parent | Descendants | Children | State) }
+
+Expr = _{ ( Post | IfElse | Slide | Or) }
+
+Selector = { (!("\\") ~ "$" ~ Expr+) }
+
+Main = _{
+   SOI ~ !("\\") ~ "$" ~ Expr+ ~ EOI
+}

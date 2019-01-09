@@ -1,0 +1,11 @@
+[package]
+name = "architect"
+version = "0.1.0"
+authors = ["Ash <ash@ashwalker.net>"]
+
+[dependencies]
+quick-xml = "^0.12"
+birch = { path = "../birch" }
+serde = "^1"
+pest = "^2"
+pest_derive = "^2"
