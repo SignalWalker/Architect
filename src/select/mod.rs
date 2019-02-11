@@ -3,7 +3,6 @@ use birch::Tree;
 use pest::iterators::Pair;
 use pest::iterators::Pairs;
 use pest::Parser;
-use std::fmt::Debug;
 use std::str::FromStr;
 use Stone;
 

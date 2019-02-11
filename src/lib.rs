@@ -1,5 +1,3 @@
-#![feature(associated_type_defaults)]
-
 pub extern crate birch;
 pub extern crate pest;
 extern crate quick_xml;
@@ -181,7 +179,7 @@ impl Debug for Element {
             res += &format!("{}='{:?}' ", a, v);
         }
         res += "/>";
-        write!(f, "{}", res);
+        write!(f, "{}", res).unwrap();
         Ok(())
     }
 }

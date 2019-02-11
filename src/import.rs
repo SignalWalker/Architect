@@ -23,7 +23,7 @@ impl<F: FileGetter> StoneMason for ImportMason<F> {
         arch: &mut Architect,
         map: &mut HashMap<String, Vec<usize>>,
     ) -> HashSet<usize> {
-        let mut res = HashSet::new();
+        let res = HashSet::new();
         if !map.contains_key("import") {
             return res;
         }
