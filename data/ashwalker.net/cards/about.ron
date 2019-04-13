@@ -1,0 +1,12 @@
+Card(
+    elements: [
+        Image(url: "../images/ash.png", alt: "$~[localization][ash_png_alt][{locale}]"),
+        Title(text: "$~[localization][champion][{locale}]"),
+        
+        Deck(
+            elements: [
+                Image(url: "../images/logos/mastodon.svg", link: "https://mastodon.social/@AshWalker")
+            ]
+        )
+    ]
+)

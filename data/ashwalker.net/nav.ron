@@ -1,0 +1,6 @@
+NavBar(
+    [
+        NavButton(text: "$~[localization][about]", target: "index.ron")
+        NavButton(text: "$~[localization][projects]", target: "projects.ron")
+    ]
+)

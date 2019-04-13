@@ -1,5 +1,6 @@
 Word = @{ LETTER ~ (LETTER | NUMBER)* }
 Number = @{ ASCII_DIGIT+ }
+WHITESPACE = _{ " " }
 
 All = { "*" }
 None = { "_" }
@@ -12,7 +13,7 @@ Children = { "/" }
 Descendants = { "//" }
 Env = { "{" ~ String ~ "}" }
 Order = { "(" ~ Expr+ ~ ")" }
-Entry = { "[" ~ String ~ ("=" ~ (String))? ~ "]" }
+Attr = { "[" ~ String ~ ("=" ~ (String))? ~ "]" }
 Index = { "[" ~ Number ~ "]" }
 State = { ":" ~ String }
 
@@ -22,7 +23,7 @@ Or = { Post ~ "||" }
 
 String = _{ (Selector | Word) }
 
-Post = _{ (Class | All | None | This | Root | Env | Order | Entry | Index | Ancestors | Parent | Descendants | Children | State) }
+Post = _{ (Class | All | None | This | Root | Env | Order | Attr | Index | Ancestors | Parent | Descendants | Children | State) }
 
 Expr = _{ ( Post | IfElse | Slide | Or) }
 
