@@ -5,9 +5,5 @@ authors = ["Ash <ash@ashwalker.net>"]
 edition = "2018"
 
 [dependencies]
-quick-xml = "^0.12"
-# birch = { git = "https://github.com/SignalWalker/Birch" }
-serde = "^1"
-ron = "^0.5"
-pest = "^2"
-pest_derive = "^2"
+birch = { git = "https://github.com/SignalWalker/Birch" }
+nom = "5.0.0-beta2"
