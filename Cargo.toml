@@ -1,0 +1,9 @@
+[package]
+name = "architect"
+version = "0.1.0"
+authors = ["Ash <ash@ashwalker.net>"]
+edition = "2018"
+
+[dependencies]
+birch = { git = "https://github.com/SignalWalker/Birch" }
+nom = "5.0.0-beta2"

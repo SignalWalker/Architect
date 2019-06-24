@@ -1,0 +1,5 @@
+/rls
+/notes
+/target
+/data/*
+Cargo.lock
