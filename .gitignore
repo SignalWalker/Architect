@@ -1,5 +1,8 @@
 /rls
 /notes
 /target
+<<<<<<< HEAD
 /data/*
+=======
+>>>>>>> 9421834fac412ba10cf25e84607d5da3bdee12d9
 Cargo.lock
