@@ -5,7 +5,7 @@ authors = ["Ash <ash@ashwalker.net>"]
 
 [dependencies]
 quick-xml = "^0.12"
-birch = { git = "https://github.com/SignalWalker/Birch" }
+birch = { git = "https://github.com/SignalWalker/Birch", branch = "old" }
 serde = "^1"
 pest = "^2"
 pest_derive = "^2"
