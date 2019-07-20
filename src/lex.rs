@@ -3,6 +3,8 @@ use nom::character::is_alphanumeric;
 use nom::character::streaming::digit1;
 use nom::number::streaming::double;
 use nom::number::streaming::float;
+// use strum::EnumDiscriminants;
+use strum_macros::EnumDiscriminants;
 
 use nom::{complete, many1, named, one_of, take_while1, ws, IResult};
 use std::convert::TryFrom;
@@ -18,9 +20,11 @@ pub enum DelimToken {
     Curly,
 }
 
-#[derive(Clone, PartialEq)]
+#[derive(Clone, PartialEq, EnumDiscriminants)]
+#[strum_discriminants(derive(Hash), name(TokenType))]
 pub enum Token<'s> {
     Ident(&'s [u8]), // alphanumeric1
+    Path(&'s [u8]),
     Use,
     As,
     Any,
@@ -86,7 +90,7 @@ impl Into<String> for Token<'_> {
             Int(i) => i.to_string(),
             F32(f) => f.to_string(),
             F64(f) => f.to_string(),
-            Ident(i) => String::from_utf8(i.to_vec()).unwrap(),
+            Ident(i) | Path(i) => String::from_utf8(i.to_vec()).unwrap(),
         }
     }
 }

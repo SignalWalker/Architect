@@ -36,7 +36,7 @@ pub enum StaticType {
 }
 
 impl TryInto<&'static str> for StaticType {
-    type Error = &'static str;
+    type Error = ();
     fn try_into(self) -> Result<&'static str, Self::Error> {
         use StaticType::*;
         match self {
@@ -45,7 +45,7 @@ impl TryInto<&'static str> for StaticType {
             Selector => Ok("Selector"),
             F32 => Ok("f32"),
             F64 => Ok("f64"),
-            _ => Err("Can't convert number type to &str"),
+            _ => Err(()),
         }
     }
 }

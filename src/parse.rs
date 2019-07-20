@@ -1,6 +1,10 @@
 use crate::lex::number::SizedNum;
-use crate::lex::Token;
+use crate::lex::DelimToken;
+use crate::lex::{Token, TokenType};
+use birch::Tree;
+use either::Either;
 use std::collections::HashMap;
+use std::collections::HashSet;
 
 #[derive(Debug, Copy, Clone)]
 pub struct Selector {}
@@ -61,10 +65,113 @@ impl<'s> From<Vec<Token<'s>>> for Ast<'s> {
     }
 }
 
+#[derive(Debug, Copy, Clone, Eq, PartialEq, Hash)]
+pub enum ExprStatus {
+    Ready,
+    Incomplete,
+    Inner,
+    Error,
+}
+
+#[derive(Debug)]
+pub enum AstBlock<'s> {
+    Expr(()),
+    Builder(ExprBuilder<'s>),
+    Root,
+}
+
+#[derive(Debug, Default)]
+pub struct ExprBuilder<'s> {
+    pub tokens: Vec<Either<Token<'s>, usize>>,
+}
+
+impl<'s> ExprBuilder<'s> {
+    pub fn new() -> Self {
+        Self { tokens: Vec::new() }
+    }
+
+    pub fn push(&mut self, token: Token<'s>) -> ExprStatus {
+        use ExprStatus::*;
+        let ok = match self.tokens
+        Incomplete
+    }
+
+    pub fn push_inner(&mut self, inner: usize) {
+        self.tokens.push(Either::Right(inner))
+    }
+}
+
+pub struct Parser<'s> {
+    pub ast: Tree<AstBlock<'s>>,
+}
+
+impl Default for Parser<'_> {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+impl<'s> Parser<'s> {
+    pub fn new() -> Self {
+        Self {
+            ast: Tree::new(AstBlock::Root),
+        }
+    }
+
+    pub fn parse(
+        &mut self,
+        data: &'s [u8],
+    ) -> Result<&'s [u8], nom::Err<(&'s [u8], nom::error::ErrorKind)>> {
+        let (rem, mut tokens) = crate::lex::multilex(data)?;
+        let mut parent_stack = vec![0];
+        let mut curr_stack = Vec::new();
+        for token in tokens.drain(0..) {
+            let parent = parent_stack[parent_stack.len() - 1];
+            if curr_stack.is_empty() {
+                let curr = self
+                    .ast
+                    .add_child(parent, AstBlock::Builder(ExprBuilder::new()));
+                curr_stack.push(curr);
+            }
+            let curr = curr_stack[curr_stack.len() - 1];
+            let result = match self.ast.0.vert_mut(curr).val {
+                AstBlock::Builder(ref mut b) => b.push(token),
+                _ => unreachable!(), // Because we take completed builders off of curr_stack
+            };
+            use ExprStatus::*;
+            match result {
+                Complete(ex) => {
+                    self.ast.0.vert_mut(curr).val = AstBlock::Expr(ex);
+                    curr_stack.pop();
+                    parent_stack.pop();
+                }
+                Incomplete => (),
+                Error => panic!("Some sort of parse error."),
+                Inner => {
+                    parent_stack.push(curr);
+                    let parent = curr;
+                    let inner = self
+                        .ast
+                        .add_child(parent, AstBlock::Builder(ExprBuilder::new()));
+                    if let AstBlock::Builder(ref mut b) = self.ast.0.vert_mut(curr).val {
+                        b.push_inner(inner);
+                    }
+                    curr_stack.push(inner);
+                }
+            }
+        }
+        Ok(rem)
+    }
+
+    pub fn finish(self) -> Tree<()> {
+        unimplemented!()
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::parse::machine::*;
+    // use crate::parse::machine::*;
     const ABOUT: &[u8] = include_bytes!("../data/ashwalker.net/about.stn");
 
     // #[test]
