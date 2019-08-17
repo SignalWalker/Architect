@@ -1,9 +1,12 @@
-use crate::lex::Token;
-use crate::parse::number::SizedNum;
+use crate::lex::number::SizedNum;
+use crate::lex::DelimToken;
+use crate::lex::{Token, TokenType};
+use birch::Tree;
+use either::Either;
 use std::collections::HashMap;
+use std::collections::HashSet;
 
-pub mod machine;
-pub mod number;
+pub mod exprbuilder;
 
 #[derive(Debug, Copy, Clone)]
 pub struct Selector {}
@@ -18,7 +21,7 @@ impl Into<String> for Selector {
 pub enum Literal {
     Str(String),
     Selector(Selector),
-    Integer(SizedNum),
+    Int(SizedNum),
     F32(f32),
     F64(f32),
 }
@@ -29,7 +32,7 @@ impl Into<String> for Literal {
         match self {
             Str(s) => format!("\"{}\"", s),
             Selector(s) => s.into(),
-            Integer(i) => i.into(),
+            Int(i) => i.into(),
             F32(f) => format!("{}f32", f),
             F64(f) => format!("{}f64", f),
         }
@@ -64,26 +67,93 @@ impl<'s> From<Vec<Token<'s>>> for Ast<'s> {
     }
 }
 
+pub struct Parser<'s> {
+    pub ast: Tree<AstBlock<'s>>,
+}
+
+impl Default for Parser<'_> {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+impl<'s> Parser<'s> {
+    pub fn new() -> Self {
+        Self {
+            ast: Tree::new(AstBlock::Root),
+        }
+    }
+
+    pub fn parse(
+        &mut self,
+        data: &'s [u8],
+    ) -> Result<&'s [u8], nom::Err<(&'s [u8], nom::error::ErrorKind)>> {
+        let (rem, mut tokens) = crate::lex::multilex(data)?;
+        let mut parent_stack = vec![0];
+        let mut curr_stack = Vec::new();
+        for token in tokens.drain(0..) {
+            let parent = parent_stack[parent_stack.len() - 1];
+            if curr_stack.is_empty() {
+                let curr = self
+                    .ast
+                    .add_child(parent, AstBlock::Builder(ExprBuilder::new()));
+                curr_stack.push(curr);
+            }
+            let curr = curr_stack[curr_stack.len() - 1];
+            let result = match self.ast.0.vert_mut(curr).val {
+                AstBlock::Builder(ref mut b) => b.push(token),
+                _ => unreachable!(), // Because we take completed builders off of curr_stack
+            };
+            use ExprStatus::*;
+            match result {
+                Ready(ex) => {
+                    self.ast.0.vert_mut(curr).val = AstBlock::Expr(ex);
+                    curr_stack.pop();
+                    parent_stack.pop();
+                }
+                Incomplete => (),
+                Error => panic!("Some sort of parse error."),
+                Inner => {
+                    parent_stack.push(curr);
+                    let parent = curr;
+                    let inner = self
+                        .ast
+                        .add_child(parent, AstBlock::Builder(ExprBuilder::new()));
+                    if let AstBlock::Builder(ref mut b) = self.ast.0.vert_mut(curr).val {
+                        b.push_inner(inner);
+                    }
+                    curr_stack.push(inner);
+                }
+            }
+        }
+        Ok(rem)
+    }
+
+    pub fn finish(self) -> Tree<()> {
+        unimplemented!()
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::parse::machine::*;
+    // use crate::parse::machine::*;
     const ABOUT: &[u8] = include_bytes!("../data/ashwalker.net/about.stn");
 
-    #[test]
-    fn parse() {
-        use Token::*;
-        let mut machine = ParseMachine::init(
-            |mut state, token| {
-                state.stack.push(token);
-                match token {
-                    Semi => Vec::new(),
-                    _ => vec![state],
-                }
-            },
-            true,
-        );
-        machine.parse(ABOUT);
-        eprintln!("{}", machine);
-    }
+    // #[test]
+    // fn parse() {
+    //     use Token::*;
+    //     let mut machine = ParseMachine::init(
+    //         |mut state, token| {
+    //             state.stack.push(token);
+    //             match token {
+    //                 Semi => Vec::new(),
+    //                 _ => vec![state],
+    //             }
+    //         },
+    //         true,
+    //     );
+    //     machine.parse(ABOUT);
+    //     eprintln!("{}", machine);
+    // }
 }

@@ -1,0 +1,54 @@
+int = @{
+    "-"?
+    ~ ("0" | ASCII_NONZERO_DIGIT ~ ASCII_DIGIT*)
+}
+number = @{
+    int
+    ~ ("." ~ ASCII_DIGIT+)?
+    ~ (^"e" ~ ("+" | "-")? ~ ASCII_DIGIT+)?
+}
+boolean = { "true" | "false" }
+char = _{
+    !("\"" | "\\") ~ ANY
+    | "\\" ~ ("\"" | "\\" | "/" | "b" | "f" | "n" | "r" | "t")
+    | "\\" ~ ("u" ~ ASCII_HEX_DIGIT{4})
+}
+inner = @{ char* }
+string = ${ "\"" ~ inner ~ "\"" }
+
+ident = @{ ID_START ~ ID_CONTINUE* }
+
+path_word = @{ (!("/" | "\0") ~ ANY)+ }
+path = @{ path_word ~ ("/" ~ path_word)* }
+url = @{ LETTER+ ~ "://" ~ path }
+use = { "use" ~ url ~ ("as" ~ ident)? ~ ";"}
+
+obj = { (ident ~ ":")? ~ obj_prod }
+named_obj = { ident ~ (":" ~ obj_prod)? }
+
+unnamed_obj_list = _{ obj_prod ~ ("," ~ obj_prod)* ~ ","? }
+obj_list = _{ obj ~ ("," ~ obj)* ~ ","? }
+named_obj_list = _{ named_obj ~ ("," ~ named_obj)* ~ ","? }
+
+indexer = _{ int | string | index | ident }
+obj_prod = _{ class | mod | dict | tuple | list | boolean | number | indexer }
+
+dict = { "{" ~ named_obj_list? ~ "}"}
+tuple = { ident? ~ "(" ~ obj_list? ~ ")" }
+index = { ident ~ "[" ~ indexer ~ "]"}
+list = { "[" ~ obj_list? ~ "]" }
+class = { ident ~ dict }
+mod = { ident ~ "<" ~ dict }
+
+named_dict = { ident ~ ":" ~ dict }
+named_list = { ident ~ ":" ~ list }
+stn = {
+    SOI ~
+    use* ~ (class | mod | dict | named_dict | tuple | list | named_list | ident)?
+}
+
+WHITESPACE = _{ " " | "\t" | NEWLINE }
+COMMENT = _@{
+    "//" ~ (!NEWLINE ~ ANY)*
+    | "/*" ~ (!"*/" ~ ANY)* ~ "*/"
+}

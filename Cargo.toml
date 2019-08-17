@@ -6,4 +6,7 @@ edition = "2018"
 
 [dependencies]
 birch = { git = "https://github.com/SignalWalker/Birch" }
-nom = "5.0.0-beta2"
+pest = "^2"
+strum = "0.15.0"
+strum_macros = "0.15.0"
+either = "1.5.2"
